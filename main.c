@@ -7,6 +7,7 @@
 
 #define BUF_S 16
 #define TREE_FILE "tree.txt"
+
 struct tnode {
 	int data;
 	struct tnode* lchild;
@@ -15,7 +16,7 @@ struct tnode {
 
 /*---------FLAGS------------*/
 /**/int MEM_FLAG = 0;     /**/
-/**/int SEARCH_FLAG = 0;  /**/
+/**/int FIND_FLAG = 0;    /**/
 /**/int SLEEP_FLAG = 0;   /**/
 /**/int SWAP_FLAG = 0;    /**/
 /**/int DEL_FLAG = 0;     /**/
@@ -25,7 +26,12 @@ struct tnode {
 /**/int HELP_FLAG = 0;    /**/
 /*--------------------------*/
 void printHeader() {
-	system("clear");
+#ifdef __linux__
+	system("clear -x");
+#elif _WIN32
+	system("cls");
+#else
+#endif
 	printf("\033[1;37m%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s\n\033[00m", "0", "1", "2", "3", "4", "5", "6", "7");
 	printf("\033[1;37m--------------------------------\n\033[00m");
 }
@@ -57,7 +63,6 @@ void printTree(struct tnode* root, int tab, int color) {
 			printf("\033[1;33m%d\033[00m\n", root->data);
 		}
 	}
-
 	printTree(root->rchild, tab + 1, 2);
 }
 
@@ -86,7 +91,7 @@ struct tnode* search(struct tnode* p, int key) {
 	temp = p;
 	while (temp != NULL) {
 		if (temp->data == key)
-			return (temp);
+			return temp;
 		else if (temp->data > key)
 			temp = temp->lchild;
 		else
@@ -98,12 +103,12 @@ struct tnode* search(struct tnode* p, int key) {
 struct tnode* getptr(struct tnode* p, int key, struct tnode** y) {
 	struct tnode* temp;
 	if (p == NULL)
-		return (NULL);
+		return NULL;
 	temp = p;
 	*y = NULL;
 	while (temp != NULL) {
 		if (temp->data == key)
-			return (temp);
+			return temp;
 		else {
 			*y = temp;
 			if (temp->data > key)
@@ -112,17 +117,16 @@ struct tnode* getptr(struct tnode* p, int key, struct tnode** y) {
 				temp = temp->rchild;
 		}
 	}
-	return (NULL);
+	return NULL;
 }
 
 struct tnode* delete(struct tnode* p, int val) {
 	struct tnode* x, * y, * temp;
 	x = getptr(p, val, &y);
 	if (x == NULL) {
-		printf(" Takav cvor ne postoji \n");
-		return (p);
-	} else {
-		/* Ako se izbacuje koren */
+		fprintf(stderr, "Node doesnt exits \n");
+		return p;
+	} else { /* Ako se izbacuje koren */
 		if (x == p) {
 			temp = x->lchild;
 			y = x->rchild;
@@ -131,11 +135,10 @@ struct tnode* delete(struct tnode* p, int val) {
 				temp = temp->rchild;
 			temp->rchild = y;
 			free(x);
-			return (p);
+			return p;
 		}
-		/* Ako se izbacuje cvor sa dva cvor – deteta */
 		if (x->lchild != NULL && x->rchild != NULL) {
-			if (y->lchild == x) {
+			if (y->lchild == x) { /* Ako se izbacuje cvor sa dva cvor – deteta */
 				temp = x->lchild;
 				y->lchild = x->lchild;
 				while (temp->rchild != NULL)
@@ -153,35 +156,31 @@ struct tnode* delete(struct tnode* p, int val) {
 				x->rchild = NULL;
 			}
 			free(x);
-			return (p);
+			return p;
 		}
-		/* Ako se izbacuje cvor koji ima jedan cvor – dete */
 		if (x->lchild == NULL && x->rchild != NULL) {
-			if (y->lchild == x)
+			if (y->lchild == x) /* Ako se izbacuje cvor koji ima jedan cvor – dete */
 				y->lchild = x->rchild;
 			else
 				y->rchild = x->rchild;
 			x->rchild = NULL;
 			free(x);
-			return (p);
-		}
-		if (x->lchild != NULL && x->rchild == NULL) {
-			if (y->lchild == x)
+			return p;
+		} else if (x->lchild != NULL && x->rchild == NULL) {
+			if (y->lchild == x) /* Ako se izbacuje cvor koji ima jedan cvor – dete */
 				y->lchild = x->lchild;
 			else
 				y->rchild = x->lchild;
 			x->lchild = NULL;
 			free(x);
-			return (p);
-		}
-		/* Ako se izbacuje list */
-		if (x->lchild == NULL && x->rchild == NULL) {
+			return p;
+		} else { /* Ako se izbacuje list */
 			if (y->lchild == x)
 				y->lchild = NULL;
 			else
 				y->rchild = NULL;
 			free(x);
-			return (p);
+			return p;
 		}
 	}
 }
@@ -202,9 +201,9 @@ struct tnode* insert(struct tnode* p, int val) {
 			else
 				temp1 = temp1->rchild;
 		}
-		if (temp2->data > val) {   /*ubacujemo novokreirani cvor kao levi naslednik*/
+		if (temp2->data > val) {
 			temp2->lchild = (struct tnode*) malloc(sizeof(struct tnode));
-			temp2 = temp2->lchild;
+			temp2 = temp2->lchild;/*ubacujemo novokreirani cvor kao levi naslednik*/
 			temp2->data = val;
 			temp2->lchild = NULL;
 			temp2->rchild = NULL;
@@ -258,10 +257,10 @@ void postorder(struct tnode* p) {
 
 void printHelp() {
 	printf("usage: trees [--key=val]... [options]...\n");
-	printf("\t%-16s%10s\n", "--search=val", "search for a node with a value <val>");
+	printf("\t%-16s%10s\n", "--find=val", "search for a node with a value <val>");
 	printf("\t%-16s%10s\n", "--del=val", "delete a node with a value <val>");
 	printf("\t%-16s%10s\n", "--swap=val", "swap children of a node with a value <val>");
-	printf("\t%-16s%10s\n", "--help", "show this message");
+	printf("\t%-16s%10s\n", "--help, -h", "show this message");
 	printf("toggles: \n");
 	printf("\t%-16s%10s\n", "-C", "start interactive tree-create mode");
 	printf("\t%-16s%10s\n", "-c", "count tree nodes");
@@ -277,11 +276,11 @@ int main(int argc, char* argv[]) {
 	memset(buf, 0, sizeof(buf));
 
 	while (*argv != NULL) {
-		if (strncmp(*argv, "--help", 6) == 0) {
+		if (strncmp(*argv, "--help", 6) == 0 || strncmp(*argv, "-h", 2) == 0) {
 			HELP_FLAG = 1;
 			break;
-		} else if (strncmp(*argv, "--search=", 9) == 0) {
-			SEARCH_FLAG = 1;
+		} else if (strncmp(*argv, "--find=", 9) == 0) {
+			FIND_FLAG = 1;
 			char* argvptr = strchr(*argv, '=');
 			argvptr++;
 			strncpy(buf, argvptr, strlen(argvptr));
@@ -323,6 +322,11 @@ int main(int argc, char* argv[]) {
 		printf("Number of nodes: ");
 		fgets(buf, sizeof(buf), stdin);
 		num_nodes = strtol(buf, NULL, 10);
+		if (num_nodes > 20) {
+			errno = EINVAL;
+			perror("Too many nodes");
+			exit(1);
+		}
 		while (num_nodes > 0) {
 			printf("Node %d: ", num_nodes);
 			if (fgets(buf, sizeof(buf), stdin)) {
@@ -337,7 +341,8 @@ int main(int argc, char* argv[]) {
 	} else {
 		FILE* fp = fopen(TREE_FILE, "r");
 		if (fp == 0) {
-			fprintf(stderr, "error: opening tree file \"%s\"", TREE_FILE);
+			errno = ENOENT;
+			perror("Error opening tree file");
 			exit(1);
 		}
 		while (fgets(buf, sizeof(buf), fp) != NULL) {
@@ -348,12 +353,12 @@ int main(int argc, char* argv[]) {
 			printHeader();
 			printTree(root, 0, 0);
 			if (SLEEP_FLAG == 1)
-				sleep(2);
+				sleep(1);
 		}
 	}
 
 
-	if (SEARCH_FLAG) {
+	if (FIND_FLAG) {
 		struct tnode* search_node = search(root, search_val);
 		if (search_node != NULL) {
 			printf("Node found: (0x%x)%d\n", search_node, search_node->data);
