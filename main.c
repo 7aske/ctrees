@@ -279,7 +279,7 @@ int main(int argc, char* argv[]) {
 		if (strncmp(*argv, "--help", 6) == 0 || strncmp(*argv, "-h", 2) == 0) {
 			HELP_FLAG = 1;
 			break;
-		} else if (strncmp(*argv, "--find=", 9) == 0) {
+		} else if (strncmp(*argv, "--find=", 7) == 0) {
 			FIND_FLAG = 1;
 			char* argvptr = strchr(*argv, '=');
 			argvptr++;
